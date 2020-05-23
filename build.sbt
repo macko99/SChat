@@ -3,15 +3,18 @@ name := "SChat"
 version := "1.0"
 
 scalaVersion := "2.13.1"
-
-lazy val akkaVersion = "2.6.5"
+lazy val akkaHttpV = "10.1.10"
+lazy val akkaV = "2.6.5"
 
 resolvers += Resolver.sonatypeRepo("snapshots")
 
 libraryDependencies ++= Seq(
-  "com.typesafe.akka" %% "akka-actor-typed" % akkaVersion,
+  "com.typesafe.akka" %% "akka-actor-typed" % akkaV,
   "ch.qos.logback" % "logback-classic" % "1.2.3",
-  "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaVersion % Test,
+  "com.typesafe.akka" %% "akka-stream" % akkaV,
+  "com.typesafe.akka" %% "akka-http" % akkaHttpV,
+  "com.typesafe.akka" %% "akka-http-core" % akkaHttpV,
+  "com.typesafe.akka" %% "akka-actor-testkit-typed" % akkaV % Test,
   "org.scalatest" %% "scalatest" % "3.1.0" % Test,
   "org.scalafx" %% "scalafx" % "14-R19"
 )
@@ -27,3 +30,4 @@ lazy val javaFXModules = Seq("base", "controls", "fxml", "graphics", "media", "s
 libraryDependencies ++= javaFXModules.map( m=>
   "org.openjfx" % s"javafx-$m" % "14.0.1" classifier osName
 )
+

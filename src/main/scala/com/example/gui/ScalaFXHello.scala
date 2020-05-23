@@ -1,4 +1,4 @@
-package com.example
+package com.example.gui
 
 import scalafx.application.JFXApp
 import scalafx.application.JFXApp.PrimaryStage
@@ -7,7 +7,7 @@ import scalafx.scene.Scene
 import scalafx.scene.effect.DropShadow
 import scalafx.scene.layout.HBox
 import scalafx.scene.paint.Color._
-import scalafx.scene.paint.{Stops, LinearGradient}
+import scalafx.scene.paint.{LinearGradient, Stops}
 import scalafx.scene.text.Text
 
 object ScalaFXHello extends JFXApp {
