@@ -1,68 +1,44 @@
 package com.example
 
-import akka.actor.ActorSystem
-import akka.{Done, NotUsed}
+import akka.Done
+import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
-import akka.stream.{ActorMaterializer, FlowShape}
-import akka.stream.scaladsl._
 import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws._
+import akka.http.scaladsl.model.ws.{TextMessage, _}
+import akka.stream.scaladsl._
+import akka.stream.{CompletionStrategy, OverflowStrategy}
 
 import scala.concurrent.Future
+import scala.io.StdIn
 
-class Client(url: String, name: String, actorSystem: ActorSystem) {
-/*
-  private val clientFlow: Flow[Message, Message, Future[Done]] =
-    Flow.fromGraph(GraphDSL.create(){
-      implicit builder =>
-        val printSink: Sink[Message, Future[Done]] =
-          Sink.foreach {
-            case message: TextMessage.Strict =>
-              println(message.text)
-          }
+class Client {
 
-        val userSource: Source[Message, NotUsed] =
-          Source.fromIterator(()=> Iterator{
-
-          })
-        FlowShape()
-    })
-
- */
-
-  def main(args: Array[String]): Unit = {
+  def connectToRoom(url: String): Unit = {
     implicit val system: ActorSystem = ActorSystem()
     import system.dispatcher
 
-
-    // print each incoming strict text message
     val printSink: Sink[Message, Future[Done]] =
       Sink.foreach {
-        case message: TextMessage.Strict =>
-          println(message.text)
+         case message: TextMessage.Strict => println(message.text)
       }
 
+    val userSource: Source[TextMessage.Strict, ActorRef] =
+      Source.actorRef(completionMatcher = {
+        case _ => CompletionStrategy.draining
+      },
+        failureMatcher = PartialFunction.empty,
+        bufferSize = 10,
+        OverflowStrategy.dropTail)
 
-    val helloSource: Source[Message, NotUsed] =
-      Source.single(TextMessage("hello world!"))
+    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
 
+    val (sourceRef, upgradeResponse)=
+      userSource
+        .viaMat(webSocketFlow)(Keep.both)
+        .toMat(printSink)(Keep.left)
+        .run()
 
-    // the Future[Done] is the materialized value of Sink.foreach
-    // and it is completed when the stream completes
-    val flow: Flow[Message, Message, Future[Done]] =
-    Flow.fromSinkAndSourceMat(printSink, helloSource)(Keep.left)
-
-
-    // upgradeResponse is a Future[WebSocketUpgradeResponse] that
-    // completes or fails when the connection succeeds or fails
-    // and closed is a Future[Done] representing the stream completion from above
-    val (upgradeResponse, closed) =
-    Http().singleWebSocketRequest(WebSocketRequest(url), flow)
-
-
-    val connected = upgradeResponse.map { upgrade =>
-      // just like a regular http request we can access response status which is available via upgrade.response.status
-      // status code 101 (Switching Protocols) indicates that server support WebSockets
+    upgradeResponse.map { upgrade =>
       if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
         Done
       } else {
@@ -70,16 +46,34 @@ class Client(url: String, name: String, actorSystem: ActorSystem) {
       }
     }
 
+    chat(sourceRef)
+    system.terminate()
+  }
 
-    // in a real application you would not side effect here
-    // and handle errors more carefully
-    connected.onComplete(println)
-    closed.foreach(_ => println("closed"))
+  def chat(socketRef: ActorRef): Unit = {
+    var running = true
+    while (running) {
+      StdIn.readLine() match {
+        case "exit" =>
+          println("Logout")
+          running = false
+        case msg => socketRef ! TextMessage.Strict(msg)
+      }
+    }
   }
 }
 
-object Client{
-  def apply(url: String, name: String)(implicit actorSystem: ActorSystem): Client = {
-    new Client(url, name, actorSystem)
+object Client {
+  def apply(): Client = {
+    new Client()
+  }
+
+  def main(args: Array[String]): Unit = {
+
+    println("enter name:")
+    val name = StdIn.readLine()
+    println("enter room number")
+    val roomId = StdIn.readInt()
+    Client().connectToRoom(s"ws://localhost:8888/schat/room/$roomId?name=$name")
   }
 }

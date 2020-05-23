@@ -47,7 +47,7 @@ Type 'exit' to stop
   def chatRoute(implicit actorSystem: ActorSystem, materializer: Materializer): Route = pathPrefix("schat"/"room" /
     IntNumber) { chatId =>
     parameter(Symbol("name")) { userName =>
-      handleWebSocketMessages(ChatRoom.getRoom(chatId).websocketUserFlow(userName))
+      handleWebSocketMessages(ChatRoom.getRoom(chatId).websocketRoomFlow(userName))
     }
   }
 

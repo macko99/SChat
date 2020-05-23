@@ -9,7 +9,7 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
   private[this] val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor], roomId))
 
-  def websocketUserFlow(user: String): Flow[Message, Message, _] =
+  def websocketRoomFlow(user: String): Flow[Message, Message, _] =
     Flow.fromGraph(GraphDSL.create(Source.actorRef(
       completionMatcher = {
         case _ => CompletionStrategy.draining
@@ -27,7 +27,7 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
           val messagesToSocket = builder.add(
             Flow[ChatMsg].map {
-              case ChatMsg(author, text) => TextMessage(s"[$author]: $text")
+              case ChatMsg(author, text) => TextMessage(s"$author > $text")
             }
           )
 

@@ -1,6 +1,6 @@
 package com.example.chat
 
-import akka.actor.{Actor, ActorRef}
+import akka.actor.{Actor, ActorRef, Props}
 
 class ChatRoomActor(roomId: Int) extends Actor {
 
@@ -9,12 +9,12 @@ class ChatRoomActor(roomId: Int) extends Actor {
   override def receive: Receive = {
     case LogIn(name, actorRef) =>
       participants += name -> actorRef
-      broadcast(ChatMsg("system",s"User $name joined channel..."))
-      println(s"User $name joined channel[$roomId]")
+      broadcast(ChatMsg("system",s"User $name joined room"))
+      println(s"User $name joined room $roomId ")
 
     case LogOut(name) =>
-      println(s"User $name left channel[$roomId]")
-      broadcast(ChatMsg("system",s"User $name left channel[$roomId]"))
+      println(s"User $name left room $roomId ")
+      broadcast(ChatMsg("system",s"User $name left room"))
       participants -= name
 
     case msg: ChatMsg =>
