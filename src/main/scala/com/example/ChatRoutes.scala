@@ -18,10 +18,6 @@ object ChatRoutes {
   }
 
   def listRoute: Route = path("schat/list") {
-    get {
-      handleWebSocketMessages(listFlow)
-    }
+    complete(ChatRooms.listRooms().toString())
   }
-
-  private val listFlow: Flow[Message, Message, _] = Flow[Message].map(_ => TextMessage(ChatRooms.listRooms().toString()))
 }

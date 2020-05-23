@@ -10,7 +10,7 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
   private[this] val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor], roomId))
 
   def websocketUserFlow(user: String): Flow[Message, Message, _] =
-    Flow.fromGraph(GraphDSL.create(Source.actorRef[ChatMsg](
+    Flow.fromGraph(GraphDSL.create(Source.actorRef(
       completionMatcher = {
         case _ => CompletionStrategy.draining
       },

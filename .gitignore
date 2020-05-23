@@ -1,7 +1,6 @@
 # Created by .ignore support plugin (hsz.mobi)
 ### Example user template template
 ### Example user template
-src/main/scala/websocket
 # IntelliJ project files
 .idea
 *.iml
@@ -25,3 +24,4 @@ project/plugins/project/
 *.class
 *.log
 
+src/test/
