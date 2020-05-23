@@ -48,10 +48,19 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
           FlowShape(messagesFromSocket.in, messagesToSocket.out)
     })
 
-  def sendMessage(message: ChatMsg): Unit = chatRoomActor ! message
-
+  override def toString: String = s"$roomId\n"
 }
 
 object ChatRoom {
-  def apply(roomId: Int)(implicit actorSystem: ActorSystem) = new ChatRoom(roomId, actorSystem)
+  def apply(roomId: Int)(implicit actorSystem: ActorSystem): ChatRoom = {
+    val chatRoom = new ChatRoom(roomId, actorSystem)
+    chatRooms += roomId -> chatRoom
+    chatRoom
+  }
+
+  private var chatRooms: Map[Int, ChatRoom] = Map.empty[Int, ChatRoom]
+
+  def getRoom(number: Int)(implicit actorSystem: ActorSystem): ChatRoom = chatRooms.getOrElse(number, ChatRoom(number))
+
+  def listRooms(): List[ChatRoom] = chatRooms.values.toList
 }

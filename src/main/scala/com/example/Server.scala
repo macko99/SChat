@@ -2,8 +2,9 @@ package com.example
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.server.Directives
-import com.example.chat.ChatRooms
+import akka.http.scaladsl.server.{Directives, Route}
+import akka.stream.Materializer
+import com.example.chat.ChatRoom
 
 import scala.io.StdIn
 
@@ -18,18 +19,13 @@ object Server extends App {
 
   import Directives._
 
-  val route = ChatRoutes.chatRoute ~
-    ChatRoutes.listRoute
+  val route = chatRoute ~ listRoute
 
   val binding = Http().bindAndHandle(route, interface, port)
 
   import actorSystem.dispatcher
 
   runCli()
-
-  private def list(): Unit = {
-    ChatRooms.listRooms().foreach(room => println(room))
-  }
 
   private def runCli(): Unit = {
     var running = true
@@ -40,11 +36,22 @@ Type 'exit' to stop
   """)
     while(running) {
       StdIn.readLine() match {
-        case "list" => list()
+        case "list" => ChatRoom.listRooms().foreach(room => println(room))
         case "exit" => binding.flatMap(_.unbind()).onComplete(_ => actorSystem.terminate())
           println("Shutdown")
           running = false
       }
     }
+  }
+
+  def chatRoute(implicit actorSystem: ActorSystem, materializer: Materializer): Route = pathPrefix("schat"/"room" /
+    IntNumber) { chatId =>
+    parameter(Symbol("name")) { userName =>
+      handleWebSocketMessages(ChatRoom.getRoom(chatId).websocketUserFlow(userName))
+    }
+  }
+
+  def listRoute: Route = path("schat"/"list") {
+    complete( ChatRoom.listRooms().toString())
   }
 }
