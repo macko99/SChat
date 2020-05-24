@@ -2,9 +2,10 @@ package com.example.chat
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.ws.{Message, TextMessage}
+import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.scaladsl._
 import akka.stream.{FlowShape, OverflowStrategy}
+import akka.util.ByteString
 
 class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
@@ -62,5 +63,10 @@ object ChatRoom {
   def listRooms(): List[ChatRoom] = chatRooms.values.toList
 
   def webSocketRoomList(): Flow[Message, Message, NotUsed] =
-    Flow[Message].map(_ => TextMessage(listRooms().toString()))
+    Flow.fromGraph(GraphDSL.create(){
+      implicit builder =>
+        val input = builder.add(Sink.ignore)
+        val output = builder.add(Source(listRooms()).map( room => TextMessage(room.toString())))
+        FlowShape(input.in, output.out)
+    })
 }

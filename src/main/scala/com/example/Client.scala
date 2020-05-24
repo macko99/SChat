@@ -1,5 +1,7 @@
 package com.example
 
+import java.io.{ByteArrayInputStream, ObjectInputStream}
+
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
@@ -16,19 +18,21 @@ class Client(host: String) {
   implicit val system: ActorSystem = ActorSystem()
   import system.dispatcher
 
-  def listRooms(): Unit = {
+  def listRooms(): Unit= {
 
     val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + "schat/list"))
 
     val printSink: Sink[Message, Future[Done]] =
       Sink.foreach {
-        case message: TextMessage.Strict => println(message.text)
+        case message: TextMessage.Strict =>
+          println(message.text)
       }
 
     Source.single(TextMessage("list"))
-        .viaMat(webSocketFlow)(Keep.both)
+        .viaMat(webSocketFlow)(Keep.left)
       .toMat(printSink)(Keep.left)
       .run()
+
   }
 
   def connectToRoom(url: String): Unit = {
@@ -91,6 +95,7 @@ object Client {
     println("enter name:")
     val name = StdIn.readLine()
 
+    println("available rooms:")
     client.listRooms()
 
     println("enter room number")
