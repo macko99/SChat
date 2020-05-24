@@ -1,6 +1,7 @@
 package com.example.gui
 
 import com.example.gui.LoginWindow.LoginData
+
 import javafx.application.Platform
 import javafx.scene.Node
 import javafx.scene.layout.GridPane
