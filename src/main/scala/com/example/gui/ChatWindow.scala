@@ -1,16 +1,19 @@
 package com.example.gui
 import java.util.Calendar
+
 import com.example.GUIClient
 import scalafx.Includes._
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
+import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent}
-import scalafx.scene.layout.VBox
+import scalafx.scene.layout.{BorderPane, HBox, VBox}
 import scalafx.scene.paint.Color._
 import scalafx.scene.text.Text
+import scalafx.scene.control.Alert.AlertType
 
 object GUIStyles {
   val richButtonStyle: String =
@@ -58,7 +61,7 @@ object ChatClientWindow extends JFXApp {
       case KeyCode.Enter =>
         val message = text() + "\n"
         text.set("")
-        client.sendMessage(message)
+        client.sendMessage(message.stripLineEnd)
       case _ =>
     }
   }
@@ -69,21 +72,34 @@ object ChatClientWindow extends JFXApp {
     children = Seq(chatOutputArea, chatInputField)
   }
 
-  val defaultRoomTab: Tab = new Tab {
-    text = "room: " + loginDialog.roomId.toString
-    content = mainChat
-    onClosed = handle(stopApp())
-    closable = false
-  }
-
-  val tabPane: TabPane = new TabPane {
-    tabs = List(defaultRoomTab)
-    style = GUIStyles.tabPaneStyle
-  }
-
   val serverAddress: String = "ws://" + loginDialog.hostname + ":" + loginDialog.port.toString + "/"
   val client: GUIClient = GUIClient(serverAddress)
   client.connectToRoom(s"schat/room/" + loginDialog.roomId + "?name=" + loginDialog.username, chatOutputArea)
+
+  val listRoomButton: Button = new Button {
+    text = "List Rooms"
+    style = GUIStyles.richButtonStyle
+    onAction = (_: ActionEvent) => listRoomAction()
+  }
+
+  val joinRoomButton: Button = new Button {
+    text = "Join Room"
+    style = GUIStyles.richButtonStyle
+    onAction = (_: ActionEvent) => joinRoomAction()
+  }
+
+  val buttonsBar: HBox = new HBox {
+    spacing = 25
+    padding = Insets(15)
+    alignment = Pos.Center
+    children = Seq(listRoomButton, joinRoomButton)
+  }
+
+  val roomIndicator: Text = new Text {
+    text = "Current Room ID: " + loginDialog.roomId.toString
+    style = "-fx-font: italic 12pt sans-serif"
+    fill = White
+  }
 
   stage = new PrimaryStage {
     title = "SChat"
@@ -102,7 +118,7 @@ object ChatClientWindow extends JFXApp {
             style = "-fx-font: bold 32pt sans-serif"
             fill = White
 
-          }, tabPane,
+          }, buttonsBar, roomIndicator, mainChat,
           new Text {
             text = s"Logged as: ${loginDialog.username}\nLogin time: ${Calendar.getInstance().getTime.toString}"
             style = "-fx-font: italic 11pt sans-serif"
@@ -118,4 +134,35 @@ object ChatClientWindow extends JFXApp {
   }
 
   Platform.runLater(() => chatInputField.requestFocus())
+
+  def listRoomAction(): Unit = {
+    val string = client.listRooms().mkString(", ")
+    println(string)
+
+    val dialog = new Alert(AlertType.Information) {
+      initOwner(stage)
+      title = "List rooms"
+      headerText = "You can list available rooms. List available below."
+      contentText = string
+    }
+
+    dialog.showAndWait()
+  }
+
+  def joinRoomAction(): Unit = {
+    val roomJoinDialog = new TextInputDialog() {
+      initOwner(stage)
+      title = "Join room"
+      headerText = "You can join any room."
+      contentText = "Please enter its ID (Int):"
+    }
+
+    roomJoinDialog.showAndWait() match {
+      case Some(name) => roomIndicator.text = "Current Room ID: " + name
+        chatOutputArea.text.set("")
+        client.disconnectFromRoom()
+        client.connectToRoom(s"schat/room/" + name + "?name=" + loginDialog.username, chatOutputArea)
+      case None => println("Room join dialog was canceled")
+    }
+  }
 }

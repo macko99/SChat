@@ -1,5 +1,8 @@
 package com.example
 
+import java.text.SimpleDateFormat
+import java.util.Calendar
+
 import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
@@ -34,7 +37,11 @@ class GUIClient(host: String) {
     checkResponse(upgradeResponse)
 
     import scala.concurrent.duration._
-    Await.result(rooms, 10.seconds).toList.map(msg => "room no " + msg.asTextMessage.getStrictText)
+    Await.result(rooms, 10.seconds).toList.map(msg => msg.asTextMessage.getStrictText)
+  }
+
+  def disconnectFromRoom(): Unit ={
+    socketRef ! Done
   }
 
   def connectToRoom(url: String, textArea: TextArea): Unit = {
@@ -42,7 +49,9 @@ class GUIClient(host: String) {
     val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + url))
 
     def guiPrint(msg: String): Unit ={
-      textArea.text.update(textArea.text.get() + msg + "\n")
+      val dateTimeFormatter = new SimpleDateFormat("hh:mm:ss a")
+      val dateTime = dateTimeFormatter.format(Calendar.getInstance.getTime)
+      textArea.text.update(textArea.text.get() + dateTime + " : " + msg + "\n")
     }
 
     val printSink: Sink[Message, Future[Done]] =

@@ -33,7 +33,7 @@ class LoginWindow(stage: Stage, var username: String, var roomId: Int, var hostn
     promptText = "Username"
   }
   val roomIdField: TextField = new TextField() {
-    promptText = "Room ID"
+    promptText = "Room ID (default: 0)"
   }
   val hostnameField: TextField = new TextField() {
     promptText = "Hostname/IP"
@@ -62,11 +62,10 @@ class LoginWindow(stage: Stage, var username: String, var roomId: Int, var hostn
   def checkLoginButton(): Unit = {
     val portText = portField.getText.trim
     val usernameWRONG = usernameField.getText.trim.isEmpty
-    val roomIdWRONG = roomIdField.getText.trim.isEmpty
     val hostnameWRONG = hostnameField.getText.trim.isEmpty
     val portWRONG = portText.isEmpty || !portText.forall(_.isDigit) || portText.length != 4
 
-    loginButton.setDisable(usernameWRONG || hostnameWRONG || portWRONG || roomIdWRONG)
+    loginButton.setDisable(usernameWRONG || hostnameWRONG || portWRONG)
   }
 
   def initializeDialog(): Unit = {
@@ -74,14 +73,14 @@ class LoginWindow(stage: Stage, var username: String, var roomId: Int, var hostn
     Platform.runLater(() => usernameField.requestFocus())
 
     usernameField.text.onChange((_, _, _) => checkLoginButton())
-    roomIdField.text.onChange((_, _, _) => checkLoginButton())
     hostnameField.text.onChange((_, _, _) => checkLoginButton())
     portField.text.onChange((_, _, _) => checkLoginButton())
 
     dialog.dialogPane().setContent(grid)
 
     dialog.resultConverter = {
-      case LoginWindow.loginButtonType => LoginData(usernameField.getText(), roomIdField.getText().toInt, hostnameField.getText(), portField.getText().toInt)
+      case LoginWindow.loginButtonType => LoginData(usernameField.getText(), roomIdField.getText().toIntOption.getOrElse(0), hostnameField.getText(),
+        portField.getText().toInt)
       case ButtonType.Cancel => sys.exit(0)
     }
 
