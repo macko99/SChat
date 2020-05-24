@@ -11,16 +11,29 @@ import akka.stream.scaladsl._
 import scala.concurrent.Future
 import scala.io.StdIn
 
-class Client {
+class Client(host: String) {
 
   implicit val system: ActorSystem = ActorSystem()
   import system.dispatcher
 
   def listRooms(): Unit = {
 
+    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + "schat/list"))
+
+    val printSink: Sink[Message, Future[Done]] =
+      Sink.foreach {
+        case message: TextMessage.Strict => println(message.text)
+      }
+
+    Source.single(TextMessage("list"))
+        .viaMat(webSocketFlow)(Keep.both)
+      .toMat(printSink)(Keep.left)
+      .run()
   }
 
   def connectToRoom(url: String): Unit = {
+
+    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + url))
 
     val printSink: Sink[Message, Future[Done]] =
       Sink.foreach {
@@ -31,7 +44,6 @@ class Client {
       Source.actorRef(10,
         OverflowStrategy.dropTail)
 
-    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(url))
 
     val (sourceRef, upgradeResponse)=
       userSource
@@ -48,11 +60,13 @@ class Client {
     }
 
     chat(sourceRef)
+  }
 
+  def exit(): Unit ={
     system.terminate()
   }
 
-  def chat(socketRef: ActorRef): Unit = {
+  private def chat(socketRef: ActorRef): Unit = {
     var running = true
     while (running) {
       StdIn.readLine() match {
@@ -66,17 +80,23 @@ class Client {
 }
 
 object Client {
-  def apply(): Client = {
-    new Client()
+  def apply(host: String): Client = {
+    new Client(host)
   }
 
   def main(args: Array[String]): Unit = {
 
+    val client = Client("ws://localhost:8888/")
+
     println("enter name:")
     val name = StdIn.readLine()
 
+    client.listRooms()
+
     println("enter room number")
     val roomId = StdIn.readInt()
-    Client().connectToRoom(s"ws://localhost:8888/schat/room/$roomId?name=$name")
+    client.connectToRoom(s"schat/room/$roomId?name=$name")
+
+    client.exit()
   }
 }

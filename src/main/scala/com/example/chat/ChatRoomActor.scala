@@ -1,6 +1,6 @@
 package com.example.chat
 
-import akka.actor.{Actor, ActorRef, Props}
+import akka.actor.{Actor, ActorRef}
 
 class ChatRoomActor(roomId: Int) extends Actor {
 
@@ -19,6 +19,9 @@ class ChatRoomActor(roomId: Int) extends Actor {
 
     case msg: ChatMsg =>
       broadcast(msg)
+
+    case "list" =>
+
   }
 
   def broadcast(message: ChatMsg): Unit = participants.values.foreach(_ ! message)

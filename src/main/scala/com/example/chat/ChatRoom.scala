@@ -1,15 +1,16 @@
 package com.example.chat
 
+import akka.NotUsed
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl._
-import akka.stream.{CompletionStrategy, FlowShape, OverflowStrategy}
+import akka.stream.{FlowShape, OverflowStrategy}
 
 class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
-  private[this] val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor], roomId))
+  private val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor],roomId))
 
-  def websocketRoomFlow(user: String): Flow[Message, Message, _] =
+  def webSocketRoomFlow(user: String): Flow[Message, Message, _] =
     Flow.fromGraph(GraphDSL.create(Source.actorRef(
        10,
       OverflowStrategy.dropTail)) {
@@ -44,7 +45,7 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
           FlowShape(messagesFromSocket.in, messagesToSocket.out)
     })
 
-  override def toString: String = s"$roomId\n"
+  override def toString: String = s"$roomId"
 }
 
 object ChatRoom {
@@ -59,4 +60,7 @@ object ChatRoom {
   def getRoom(number: Int)(implicit actorSystem: ActorSystem): ChatRoom = chatRooms.getOrElse(number, ChatRoom(number))
 
   def listRooms(): List[ChatRoom] = chatRooms.values.toList
+
+  def webSocketRoomList(): Flow[Message, Message, NotUsed] =
+    Flow[Message].map(_ => TextMessage(listRooms().toString()))
 }
