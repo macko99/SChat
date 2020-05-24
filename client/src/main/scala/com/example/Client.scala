@@ -1,18 +1,15 @@
 package com.example
 
-import java.io.{ByteArrayInputStream, ObjectInputStream}
-
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{TextMessage, _}
-import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl._
+import akka.stream.{CompletionStrategy, OverflowStrategy}
 
 import scala.concurrent.{Await, Future}
 import scala.io.StdIn
-import scala.util.{Failure, Success}
 
 class Client(host: String) {
 
@@ -46,6 +43,7 @@ class Client(host: String) {
     val printSink: Sink[Message, Future[Done]] =
       Sink.foreach {
         case message: TextMessage.Strict => println(message.text)
+        case _ => println("unknown message")
       }
 
     val userSource: Source[Message, ActorRef] =
@@ -102,7 +100,18 @@ object Client {
 
   def main(args: Array[String]): Unit = {
 
-    val client = Client("ws://localhost:8888/")
+    print("host (default localhost):")
+    val host = StdIn.readLine() match {
+      case "" => "localhost"
+      case h => h
+    }
+    print("port (default 8888): ")
+    val port = StdIn.readLine() match {
+      case "" => 8888
+      case p => p.toInt
+    }
+
+    val client = Client(s"ws://$host:$port/")
 
     println("enter name:")
     val name = StdIn.readLine()
