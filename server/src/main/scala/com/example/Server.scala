@@ -3,7 +3,6 @@ package com.example
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.{Directives, Route}
-import com.example.chat.ChatRoom
 
 import scala.io.StdIn
 
