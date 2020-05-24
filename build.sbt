@@ -1,3 +1,5 @@
+import sbt.TaskKey
+
 name := "SChat"
 
 version := "1.0"
@@ -25,6 +27,7 @@ lazy val server =
   project.in(file("server"))
     .settings(
       scalaVersion := scalaV,
+      TaskKey[Unit]("server") := (run in Compile).toTask(" com.example.Server").value,
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-actor-typed" % akkaV,
         "com.typesafe.akka" %% "akka-stream" % akkaV,
@@ -37,6 +40,8 @@ lazy val client =
   project.in(file("client"))
     .settings(
       scalaVersion := scalaV,
+      TaskKey[Unit]("cli") := (runMain in Compile).toTask(" com.example.CLIClient").value,
+      TaskKey[Unit]("gui") := (runMain in Compile).toTask(" com.example.gui.ChatClientWindow").value,
       libraryDependencies ++= Seq(
         "com.typesafe.akka" %% "akka-stream" % akkaV,
         "com.typesafe.akka" %% "akka-http" % akkaHttpV,

@@ -2,18 +2,19 @@ package com.example.gui
 
 import java.util.Calendar
 
+import com.example.GUIClient
 import scalafx.Includes._
 import scalafx.application.JFXApp.PrimaryStage
 import scalafx.application.{JFXApp, Platform}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
-import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent}
-import scalafx.scene.layout.{HBox, VBox}
+import scalafx.scene.layout.{BorderPane, HBox, VBox}
 import scalafx.scene.paint.Color._
 import scalafx.scene.text.Text
+import scalafx.scene.control.Alert.AlertType
 
 object GUIStyles {
   val richButtonStyle: String =
@@ -129,7 +130,6 @@ object ChatClientWindow extends JFXApp {
     onCloseRequest = _ => {
       client.exit()
       Platform.exit()
-      sys.exit()
     }
   }
 
