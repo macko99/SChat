@@ -129,7 +129,6 @@ object ChatClientWindow extends JFXApp {
     onCloseRequest = _ => {
       client.exit()
       Platform.exit()
-      sys.exit()
     }
   }
 
