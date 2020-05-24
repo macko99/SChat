@@ -1,18 +1,15 @@
 package com.example
 
-import java.io.{ByteArrayInputStream, ObjectInputStream}
-
-import akka.{Done, NotUsed}
+import akka.Done
 import akka.actor.{ActorRef, ActorSystem}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.ws.{TextMessage, _}
-import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl._
+import akka.stream.{CompletionStrategy, OverflowStrategy}
 
 import scala.concurrent.{Await, Future}
 import scala.io.StdIn
-import scala.util.{Failure, Success}
 
 class Client(host: String) {
 
@@ -46,6 +43,7 @@ class Client(host: String) {
     val printSink: Sink[Message, Future[Done]] =
       Sink.foreach {
         case message: TextMessage.Strict => println(message.text)
+        case _ => println("unknown message")
       }
 
     val userSource: Source[Message, ActorRef] =
@@ -86,10 +84,34 @@ class Client(host: String) {
     var running = true
     while (running) {
       StdIn.readLine() match {
-        case "exit" =>
-          println("Logout")
-          running = false
+        case "exit" => running = false
+          socketRef ! Done
         case msg => socketRef ! TextMessage(msg)
+      }
+    }
+  }
+
+  def runCli(): Unit = {
+    var running = true
+    print("enter name: ")
+    val name = StdIn.readLine()
+    println(
+      s"""Type 'list' to list available rooms
+Type 'connect <room number>' to join
+Type 'exit' while in room to leave it
+Type 'exit' while not in room to stop""")
+    while (running) {
+      print(name + ">")
+      StdIn.readLine() match {
+        case "list" => println("available rooms:")
+          this.listRooms().foreach(println)
+        case "exit" => this.exit()
+          println("Shutdown")
+          running = false
+        case connect: String => if (connect.contains("connect")) {
+          val roomId = connect.replaceAll("connect", "").trim.toInt
+          this.connectToRoom(s"schat/room/$roomId?name=$name")
+        } else println("unknown command")
       }
     }
   }
@@ -101,19 +123,17 @@ object Client {
   }
 
   def main(args: Array[String]): Unit = {
+    print("host (default localhost): ")
+    val host = StdIn.readLine() match {
+      case "" => "localhost"
+      case h => h
+    }
+    print("port (default 8888): ")
+    val port = StdIn.readLine() match {
+      case "" => 8888
+      case p => p.toInt
+    }
 
-    val client = Client("ws://localhost:8888/")
-
-    println("enter name:")
-    val name = StdIn.readLine()
-
-    println("available rooms:")
-    client.listRooms().foreach(println)
-
-    println("enter room number")
-    val roomId = StdIn.readInt()
-    client.connectToRoom(s"schat/room/$roomId?name=$name")
-
-    client.exit()
+    Client(s"ws://$host:$port/").runCli()
   }
 }

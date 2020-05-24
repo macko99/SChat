@@ -1,11 +1,10 @@
 package com.example.chat
 
-import akka.{Done, NotUsed}
 import akka.actor.{ActorSystem, Props}
-import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
+import akka.http.scaladsl.model.ws.{Message, TextMessage}
 import akka.stream.scaladsl._
 import akka.stream.{CompletionStrategy, FlowShape, OverflowStrategy}
-import akka.util.ByteString
+import akka.{Done, NotUsed}
 
 class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 

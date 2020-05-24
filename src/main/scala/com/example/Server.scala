@@ -3,38 +3,29 @@ package com.example
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.server.{Directives, Route}
-import akka.stream.Materializer
 import com.example.chat.ChatRoom
 
 import scala.io.StdIn
 
-object Server extends App {
+class Server(host: String, port: Int) {
 
   implicit val actorSystem: ActorSystem = ActorSystem("akka-system")
 
-  val config = actorSystem.settings.config
-  val interface = config.getString("app.interface")
-
-  val port = config.getInt("app.port")
-
   import Directives._
 
-  val route = chatRoute ~ listRoute
+  private[this] val route = chatRoute ~ listRoute
 
-  val binding = Http().bindAndHandle(route, interface, port)
+  private[this] val binding = Http().bindAndHandle(route, host, port)
 
   import actorSystem.dispatcher
 
-  runCli()
-
-  private def runCli(): Unit = {
+  def runCli(): Unit = {
     var running = true
-    println(s"""
-Listening on http://$interface:$port
+    println(s"""Listening on http://$host:$port
 Type 'list' to list available rooms
-Type 'exit' to stop
-  """)
-    while(running) {
+Type 'exit' to stop""")
+    while (running) {
+      print(">")
       StdIn.readLine() match {
         case "list" => ChatRoom.listRooms().foreach(room => println(room))
         case "exit" => binding.flatMap(_.unbind()).onComplete(_ => actorSystem.terminate())
@@ -44,14 +35,33 @@ Type 'exit' to stop
     }
   }
 
-  def chatRoute(implicit actorSystem: ActorSystem, materializer: Materializer): Route = pathPrefix("schat"/"room" /
-    IntNumber) { chatId =>
+  def chatRoute: Route = pathPrefix("schat" / "room" / IntNumber) { chatId =>
     parameter(Symbol("name")) { userName =>
       handleWebSocketMessages(ChatRoom.getRoom(chatId).webSocketRoomFlow(userName))
     }
   }
 
-  def listRoute: Route = path("schat"/"list") {
+  def listRoute: Route = path("schat" / "list") {
     handleWebSocketMessages(ChatRoom.webSocketRoomList())
+  }
+}
+
+object Server {
+  def apply(host: String, port: Int): Server = {
+    new Server(host, port)
+  }
+
+  def main(args: Array[String]): Unit = {
+    print("host (default localhost): ")
+    val host = StdIn.readLine() match {
+      case "" => "localhost"
+      case h => h
+    }
+    print("port (default 8888): ")
+    val port = StdIn.readLine() match {
+      case "" => 8888
+      case p => p.toInt
+    }
+    Server(host, port).runCli()
   }
 }
