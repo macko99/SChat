@@ -1,4 +1,4 @@
-package com.example.chat
+package com.example
 
 import akka.actor.{Actor, ActorRef}
 
