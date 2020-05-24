@@ -4,15 +4,9 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 
 import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{TextMessage, _}
-import akka.stream.scaladsl._
-import akka.stream.{CompletionStrategy, OverflowStrategy}
+import akka.actor.ActorRef
+import akka.http.scaladsl.model.ws.TextMessage
 import scalafx.scene.control.TextArea
-
-import scala.concurrent.{Await, Future}
 
 class GUIClient(host: String) {
 

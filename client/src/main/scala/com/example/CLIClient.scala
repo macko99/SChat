@@ -1,14 +1,9 @@
 package com.example
 
 import akka.Done
-import akka.actor.{ActorRef, ActorSystem}
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.model._
-import akka.http.scaladsl.model.ws.{TextMessage, _}
-import akka.stream.scaladsl._
-import akka.stream.{CompletionStrategy, OverflowStrategy}
+import akka.actor.ActorRef
+import akka.http.scaladsl.model.ws.TextMessage
 
-import scala.concurrent.{Await, Future, TimeoutException}
 import scala.io.StdIn
 
 class CLIClient(host: String) {
