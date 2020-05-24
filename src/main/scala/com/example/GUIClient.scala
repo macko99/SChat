@@ -52,6 +52,8 @@ class GUIClient(host: String) {
       val dateTimeFormatter = new SimpleDateFormat("hh:mm:ss a")
       val dateTime = dateTimeFormatter.format(Calendar.getInstance.getTime)
       textArea.text.update(textArea.text.get() + dateTime + " : " + msg + "\n")
+      textArea.selectPositionCaret(textArea.getLength)
+      textArea.deselect()
     }
 
     val printSink: Sink[Message, Future[Done]] =
@@ -80,7 +82,6 @@ class GUIClient(host: String) {
     checkResponse(upgradeResponse)
 
     socketRef = sourceRef
-    //    chat(sourceRef)
   }
 
   def exit(): Unit = {
