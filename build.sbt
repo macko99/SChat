@@ -3,7 +3,7 @@ name := "SChat"
 version := "1.0"
 
 scalaVersion := "2.13.1"
-lazy val akkaHttpV = "10.1.10"
+lazy val akkaHttpV = "10.1.12"
 lazy val akkaV = "2.6.5"
 
 resolvers += Resolver.sonatypeRepo("snapshots")

@@ -1,19 +1,24 @@
 package com.example.chat
 
-import akka.NotUsed
+import akka.{Done, NotUsed}
 import akka.actor.{ActorSystem, Props}
 import akka.http.scaladsl.model.ws.{BinaryMessage, Message, TextMessage}
 import akka.stream.scaladsl._
-import akka.stream.{FlowShape, OverflowStrategy}
+import akka.stream.{CompletionStrategy, FlowShape, OverflowStrategy}
 import akka.util.ByteString
 
 class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
-  private val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor],roomId))
+  private val chatRoomActor = actorSystem.actorOf(Props(classOf[ChatRoomActor], roomId))
 
   def webSocketRoomFlow(user: String): Flow[Message, Message, _] =
     Flow.fromGraph(GraphDSL.create(Source.actorRef(
-       10,
+      completionMatcher = {
+        case Done =>
+          CompletionStrategy.draining
+      },
+      failureMatcher = PartialFunction.empty,
+      bufferSize = 10,
       OverflowStrategy.dropTail)) {
       implicit builder =>
         import GraphDSL.Implicits._
@@ -63,10 +68,10 @@ object ChatRoom {
   def listRooms(): List[ChatRoom] = chatRooms.values.toList
 
   def webSocketRoomList(): Flow[Message, Message, NotUsed] =
-    Flow.fromGraph(GraphDSL.create(){
+    Flow.fromGraph(GraphDSL.create() {
       implicit builder =>
         val input = builder.add(Sink.ignore)
-        val output = builder.add(Source(listRooms()).map( room => TextMessage(room.toString())))
+        val output = builder.add(Source(listRooms()).map(room => TextMessage(room.toString())))
         FlowShape(input.in, output.out)
     })
 }
