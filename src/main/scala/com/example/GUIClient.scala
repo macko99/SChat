@@ -32,6 +32,8 @@ class GUIClient(host: String) {
       val dateTimeFormatter = new SimpleDateFormat("hh:mm:ss a")
       val dateTime = dateTimeFormatter.format(Calendar.getInstance.getTime)
       textArea.text.update(textArea.text.get() + dateTime + " : " + msg + "\n")
+      textArea.selectPositionCaret(textArea.getLength)
+      textArea.deselect()
     }
 
     socketRef = client.connectToRoom(url, guiPrint)
