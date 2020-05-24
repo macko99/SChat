@@ -29,7 +29,7 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
           val messagesToSocket = builder.add(
             Flow[ChatMsg].map {
-              case ChatMsg(author, text) => TextMessage(s"$author > $text")
+              case ChatMsg(author, text) => TextMessage(s"$author : $text")
             }
           )
 

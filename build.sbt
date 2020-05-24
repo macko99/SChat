@@ -46,8 +46,6 @@ lazy val client =
       ),
       libraryDependencies ++= javaFXModules.map( m=>
         "org.openjfx" % s"javafx-$m" % "14.0.1" classifier osName
-      ),
-      fork in run := true,
-      connectInput in run := true
+      )
     )
 

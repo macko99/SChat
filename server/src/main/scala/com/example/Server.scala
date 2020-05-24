@@ -18,15 +18,13 @@ class Server(host: String, port: Int) {
 
   import actorSystem.dispatcher
 
-  private def runCli(): Unit = {
+  def runCli(): Unit = {
     var running = true
-    println(
-      s"""
-Listening on http://$host:$port
+    println(s"""Listening on http://$host:$port
 Type 'list' to list available rooms
-Type 'exit' to stop
-  """)
+Type 'exit' to stop""")
     while (running) {
+      print(">")
       StdIn.readLine() match {
         case "list" => ChatRoom.listRooms().foreach(room => println(room))
         case "exit" => binding.flatMap(_.unbind()).onComplete(_ => actorSystem.terminate())
@@ -48,8 +46,12 @@ Type 'exit' to stop
 }
 
 object Server {
-  def apply(): Server = {
-    print("host (default localhost):")
+  def apply(host: String, port: Int): Server = {
+    new Server(host, port)
+  }
+
+  def main(args: Array[String]): Unit = {
+    print("host (default localhost): ")
     val host = StdIn.readLine() match {
       case "" => "localhost"
       case h => h
@@ -59,10 +61,6 @@ object Server {
       case "" => 8888
       case p => p.toInt
     }
-    new Server(host, port)
-  }
-
-  def main(args: Array[String]): Unit = {
-    Server().runCli()
+    Server(host, port).runCli()
   }
 }

@@ -84,10 +84,34 @@ class Client(host: String) {
     var running = true
     while (running) {
       StdIn.readLine() match {
-        case "exit" =>
-          println("Logout")
-          running = false
+        case "exit" => running = false
+          socketRef ! Done
         case msg => socketRef ! TextMessage(msg)
+      }
+    }
+  }
+
+  def runCli(): Unit = {
+    var running = true
+    print("enter name: ")
+    val name = StdIn.readLine()
+    println(
+      s"""Type 'list' to list available rooms
+Type 'connect <room number>' to join
+Type 'exit' while in room to leave it
+Type 'exit' while not in room to stop""")
+    while (running) {
+      print(name + ">")
+      StdIn.readLine() match {
+        case "list" => println("available rooms:")
+          this.listRooms().foreach(println)
+        case "exit" => this.exit()
+          println("Shutdown")
+          running = false
+        case connect: String => if (connect.contains("connect")) {
+          val roomId = connect.replaceAll("connect", "").trim.toInt
+          this.connectToRoom(s"schat/room/$roomId?name=$name")
+        } else println("unknown command")
       }
     }
   }
@@ -99,8 +123,7 @@ object Client {
   }
 
   def main(args: Array[String]): Unit = {
-
-    print("host (default localhost):")
+    print("host (default localhost): ")
     val host = StdIn.readLine() match {
       case "" => "localhost"
       case h => h
@@ -111,18 +134,6 @@ object Client {
       case p => p.toInt
     }
 
-    val client = Client(s"ws://$host:$port/")
-
-    println("enter name:")
-    val name = StdIn.readLine()
-
-    println("available rooms:")
-    client.listRooms().foreach(println)
-
-    println("enter room number")
-    val roomId = StdIn.readInt()
-    client.connectToRoom(s"schat/room/$roomId?name=$name")
-
-    client.exit()
+    Client(s"ws://$host:$port/").runCli()
   }
 }
