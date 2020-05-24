@@ -11,18 +11,14 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 
   def websocketRoomFlow(user: String): Flow[Message, Message, _] =
     Flow.fromGraph(GraphDSL.create(Source.actorRef(
-      completionMatcher = {
-        case _ => CompletionStrategy.draining
-      },
-      failureMatcher = PartialFunction.empty,
-      bufferSize = 10,
+       10,
       OverflowStrategy.dropTail)) {
       implicit builder =>
         import GraphDSL.Implicits._
         chatSource =>
           val messagesFromSocket = builder.add(
             Flow[Message].collect {
-              case TextMessage.Strict(txt) => ChatMsg(user, txt)
+              case TextMessage.Strict(text) => ChatMsg(user, text)
             })
 
           val messagesToSocket = builder.add(
