@@ -16,29 +16,11 @@ import scala.concurrent.{Await, Future}
 
 class GUIClient(host: String) {
 
-  implicit val system: ActorSystem = ActorSystem()
-  import system.dispatcher
+  private val client = new Client(host)
 
   var socketRef: ActorRef = _
 
-  def listRooms(): List[String] = {
-
-    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + "schat/list"))
-
-    val printSink: Sink[Message, Future[Seq[Message]]] =
-      Sink.seq[Message]
-
-    val (upgradeResponse, rooms) =
-      Source.single(TextMessage("list"))
-        .viaMat(webSocketFlow)(Keep.right)
-        .toMat(printSink)(Keep.both)
-        .run()
-
-    checkResponse(upgradeResponse)
-
-    import scala.concurrent.duration._
-    Await.result(rooms, 10.seconds).toList.map(msg => msg.asTextMessage.getStrictText)
-  }
+  def listRooms(): List[String] = client.listRooms()
 
   def disconnectFromRoom(): Unit ={
     socketRef ! Done
@@ -46,54 +28,16 @@ class GUIClient(host: String) {
 
   def connectToRoom(url: String, textArea: TextArea): Unit = {
 
-    val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + url))
-
     def guiPrint(msg: String): Unit ={
       val dateTimeFormatter = new SimpleDateFormat("hh:mm:ss a")
       val dateTime = dateTimeFormatter.format(Calendar.getInstance.getTime)
       textArea.text.update(textArea.text.get() + dateTime + " : " + msg + "\n")
     }
 
-    val printSink: Sink[Message, Future[Done]] =
-      Sink.foreach {
-        case message: TextMessage.Strict => guiPrint(message.text)
-        case _ => guiPrint("unknown message")
-      }
-
-    val userSource: Source[Message, ActorRef] =
-      Source.actorRef(
-        completionMatcher = {
-          case Done =>
-            CompletionStrategy.draining
-        },
-        failureMatcher = PartialFunction.empty,
-        bufferSize = 10,
-        OverflowStrategy.dropTail)
-
-
-    val (sourceRef, upgradeResponse) =
-      userSource
-        .viaMat(webSocketFlow)(Keep.both)
-        .toMat(printSink)(Keep.left)
-        .run()
-
-    checkResponse(upgradeResponse)
-
-    socketRef = sourceRef
-    //    chat(sourceRef)
+    socketRef = client.connectToRoom(url, guiPrint)
   }
 
-  def exit(): Unit = {
-    system.terminate()
-  }
-
-  private def checkResponse(response: Future[WebSocketUpgradeResponse]): Unit = response.map { upgrade =>
-    if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
-      Done
-    } else {
-      throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
-    }
-  }
+  def exit(): Unit = client.exit()
 
   def sendMessage(msg: String): Unit = {
     socketRef ! TextMessage(msg)
