@@ -5,13 +5,14 @@ import akka.actor.{ActorRef, ActorSystem, Terminated}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.model.ws.{Message, TextMessage, WebSocketRequest, WebSocketUpgradeResponse}
-import akka.stream.{CompletionStrategy, OverflowStrategy}
 import akka.stream.scaladsl.{Keep, Sink, Source}
+import akka.stream.{CompletionStrategy, OverflowStrategy}
 
 import scala.concurrent.{Await, Future, TimeoutException}
 
 class Client(host: String) {
   implicit val system: ActorSystem = ActorSystem()
+
   import system.dispatcher
 
   def listRooms(): List[String] = {
@@ -35,7 +36,7 @@ class Client(host: String) {
     }
   }
 
-  def connectToRoom(url: String, printFun: String => Unit ): ActorRef = {
+  def connectToRoom(url: String, printFun: String => Unit): ActorRef = {
 
     val webSocketFlow = Http().webSocketClientFlow(WebSocketRequest(host + url))
 
@@ -67,8 +68,6 @@ class Client(host: String) {
     sourceRef
   }
 
-  def exit(): Future[Terminated] = system.terminate()
-
   private def checkResponse(response: Future[WebSocketUpgradeResponse]): Unit = response.map { upgrade =>
     if (upgrade.response.status == StatusCodes.SwitchingProtocols) {
       Done
@@ -76,4 +75,6 @@ class Client(host: String) {
       throw new RuntimeException(s"Connection failed: ${upgrade.response.status}")
     }
   }
+
+  def exit(): Future[Terminated] = system.terminate()
 }

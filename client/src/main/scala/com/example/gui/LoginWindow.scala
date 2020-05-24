@@ -1,7 +1,6 @@
 package com.example.gui
 
 import com.example.gui.LoginWindow.LoginData
-
 import javafx.application.Platform
 import javafx.scene.Node
 import javafx.scene.layout.GridPane
@@ -15,11 +14,11 @@ import scala.annotation.tailrec
 
 object LoginWindow {
 
-  case class LoginData(username: String, roomId: Int, hostname: String, port: Int)
-
   val loginButtonType = new ButtonType("Sign In", ButtonData.OKDone)
 
-  def apply(stage: Stage): LoginWindow = new LoginWindow(stage, "", 0,"", 0)
+  def apply(stage: Stage): LoginWindow = new LoginWindow(stage, "", 0, "", 0)
+
+  case class LoginData(username: String, roomId: Int, hostname: String, port: Int)
 }
 
 class LoginWindow(stage: Stage, var username: String, var roomId: Int, var hostname: String, var port: Int) {

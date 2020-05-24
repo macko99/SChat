@@ -20,7 +20,8 @@ class Server(host: String, port: Int) {
 
   def runCli(): Unit = {
     var running = true
-    println(s"""Listening on http://$host:$port
+    println(
+      s"""Listening on http://$host:$port
 Type 'list' to list available rooms
 Type 'exit' to stop""")
     while (running) {
@@ -46,10 +47,6 @@ Type 'exit' to stop""")
 }
 
 object Server {
-  def apply(host: String, port: Int): Server = {
-    new Server(host, port)
-  }
-
   def main(args: Array[String]): Unit = {
     print("host (default localhost): ")
     val host = StdIn.readLine() match {
@@ -62,5 +59,9 @@ object Server {
       case p => p.toInt
     }
     Server(host, port).runCli()
+  }
+
+  def apply(host: String, port: Int): Server = {
+    new Server(host, port)
   }
 }

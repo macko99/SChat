@@ -54,17 +54,15 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
 }
 
 object ChatRoom {
+  private var chatRooms: Map[Int, ChatRoom] = Map.empty[Int, ChatRoom]
+
+  def getRoom(number: Int)(implicit actorSystem: ActorSystem): ChatRoom = chatRooms.getOrElse(number, ChatRoom(number))
+
   def apply(roomId: Int)(implicit actorSystem: ActorSystem): ChatRoom = {
     val chatRoom = new ChatRoom(roomId, actorSystem)
     chatRooms += roomId -> chatRoom
     chatRoom
   }
-
-  private var chatRooms: Map[Int, ChatRoom] = Map.empty[Int, ChatRoom]
-
-  def getRoom(number: Int)(implicit actorSystem: ActorSystem): ChatRoom = chatRooms.getOrElse(number, ChatRoom(number))
-
-  def listRooms(): List[ChatRoom] = chatRooms.values.toList
 
   def webSocketRoomList(): Flow[Message, Message, NotUsed] =
     Flow.fromGraph(GraphDSL.create() {
@@ -73,4 +71,6 @@ object ChatRoom {
         val output = builder.add(Source(listRooms()).map(room => TextMessage(room.toString())))
         FlowShape(input.in, output.out)
     })
+
+  def listRooms(): List[ChatRoom] = chatRooms.values.toList
 }

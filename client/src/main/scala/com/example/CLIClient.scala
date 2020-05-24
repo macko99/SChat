@@ -10,17 +10,6 @@ class CLIClient(host: String) {
 
   private val client = new Client(host)
 
-  private def chat(socketRef: ActorRef): Unit = {
-    var running = true
-    while (running) {
-      StdIn.readLine() match {
-        case "exit" => running = false
-          socketRef ! Done
-        case msg => socketRef ! TextMessage(msg)
-      }
-    }
-  }
-
   def runCli(): Unit = {
     var running = true
     print("enter name: ")
@@ -45,13 +34,20 @@ Type 'exit' while not in room to stop""")
       }
     }
   }
+
+  private def chat(socketRef: ActorRef): Unit = {
+    var running = true
+    while (running) {
+      StdIn.readLine() match {
+        case "exit" => running = false
+          socketRef ! Done
+        case msg => socketRef ! TextMessage(msg)
+      }
+    }
+  }
 }
 
 object CLIClient {
-  def apply(host: String): CLIClient = {
-    new CLIClient(host)
-  }
-
   def main(args: Array[String]): Unit = {
     print("host (default localhost): ")
     val host = StdIn.readLine() match {
@@ -65,5 +61,9 @@ object CLIClient {
     }
 
     CLIClient(s"ws://$host:$port/").runCli()
+  }
+
+  def apply(host: String): CLIClient = {
+    new CLIClient(host)
   }
 }

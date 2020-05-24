@@ -16,13 +16,13 @@ class GUIClient(host: String) {
 
   def listRooms(): List[String] = client.listRooms()
 
-  def disconnectFromRoom(): Unit ={
+  def disconnectFromRoom(): Unit = {
     socketRef ! Done
   }
 
   def connectToRoom(url: String, textArea: TextArea): Unit = {
 
-    def guiPrint(msg: String): Unit ={
+    def guiPrint(msg: String): Unit = {
       val dateTimeFormatter = new SimpleDateFormat("hh:mm:ss a")
       val dateTime = dateTimeFormatter.format(Calendar.getInstance.getTime)
       textArea.text.update(textArea.text.get() + dateTime + " : " + msg + "\n")

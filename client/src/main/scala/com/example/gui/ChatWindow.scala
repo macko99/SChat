@@ -9,12 +9,12 @@ import scalafx.application.{JFXApp, Platform}
 import scalafx.event.ActionEvent
 import scalafx.geometry.{Insets, Pos}
 import scalafx.scene.Scene
+import scalafx.scene.control.Alert.AlertType
 import scalafx.scene.control._
 import scalafx.scene.input.{KeyCode, KeyEvent}
-import scalafx.scene.layout.{BorderPane, HBox, VBox}
+import scalafx.scene.layout.{HBox, VBox}
 import scalafx.scene.paint.Color._
 import scalafx.scene.text.Text
-import scalafx.scene.control.Alert.AlertType
 
 object GUIStyles {
   val richButtonStyle: String =
@@ -47,7 +47,7 @@ object GUIStyles {
 
 object ChatClientWindow extends JFXApp {
 
-  val loginDialog: LoginWindow= LoginWindow(stage)
+  val loginDialog: LoginWindow = LoginWindow(stage)
   loginDialog.initializeDialog()
 
   val chatOutputArea: TextArea = new TextArea {
