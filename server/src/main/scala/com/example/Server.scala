@@ -27,7 +27,7 @@ Type 'exit' to stop""")
     while (running) {
       print(">")
       StdIn.readLine() match {
-        case "list" => ChatRoom.listRooms().foreach(room => println(room))
+        case "list" => ChatRoom.listRooms().foreach(room => println(s"room no $room"))
         case "exit" => binding.flatMap(_.unbind()).onComplete(_ => actorSystem.terminate())
           println("Shutdown")
           running = false
