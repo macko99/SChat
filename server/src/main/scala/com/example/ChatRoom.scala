@@ -28,8 +28,9 @@ class ChatRoom(roomId: Int, actorSystem: ActorSystem) {
             })
 
           val messagesToSocket = builder.add(
-            Flow[ChatMsg].map {
+            Flow[Messages].map {
               case ChatMsg(author, text) => TextMessage(s"$author : $text")
+              case HistoryMsg(history) => TextMessage(history)
             }
           )
 
